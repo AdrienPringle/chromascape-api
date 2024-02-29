@@ -5,7 +5,7 @@ import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 
 //lmfao dont mind this abomination
-(BigInt.prototype as any).toJSON = function() { return this.toString() }
+(BigInt.prototype as any).toJSON = function () { return this.toString() }
 
 
 const app = express();
@@ -44,10 +44,10 @@ async function getFirebaseAuth(req: Request, res: Response, next: NextFunction) 
   if (auth_header) {
     try {
       const decoded_token = await defaultAuth.verifyIdToken(auth_header);
-      if(!req.context){req.context = {}}
+      if (!req.context) { req.context = {} }
       req.context.uid = decoded_token.uid;
       return next();
-    } catch (e) { 
+    } catch (e) {
 
       //todo remove in prod
       console.error(e);
@@ -69,7 +69,7 @@ async function authorizeUser(req: Request, res: Response, next: NextFunction) {
         }
       })
 
-      if(!req.context){req.context = {}}
+      if (!req.context) { req.context = {} }
       req.context.uid = uid;
       req.context.id = potential_user.id;
       return next();
@@ -185,7 +185,7 @@ app.post("/api/user/device_pattern", getFirebaseAuth, authorizeUser, async (req,
       }
     })
 
-    if (devices.count == 0){
+    if (devices.count == 0) {
       const err = new Error('no update');
       res.status(400);
       return next(err);
@@ -519,6 +519,7 @@ app.get("/api/user", getFirebaseAuth, async (req, res, next) => {
  * @apiSuccess {bigint} patternId?
  * @apiSuccess {String} lightLayout?
  * @apiSuccess {Date} createdAt
+ * @apiSuccess {String} Pattern json pattern
  */
 app.get("/api/device", getFirebaseAuth, async (req, res, next) => {
   const uid = req.context.uid;
@@ -532,7 +533,10 @@ app.get("/api/device", getFirebaseAuth, async (req, res, next) => {
     const device = await prisma.device.findUniqueOrThrow({
       where: {
         firebase_uid: uid
-      }
+      },
+      include: {
+        Pattern: true
+      },
     });
     return res.json(device);
   } catch (e) {
@@ -601,7 +605,7 @@ app.post("/api/device", getFirebaseAuth, async (req, res, next) => {
 
 
 /**
- * @api {get} /user/pattern/:pattern_id Get a pattern by id
+ * @api {get} /pattern/:pattern_id Get a pattern by id
  * @apiGroup Global
  * 
  * @apiParam {bigint} pattern_id pattern binary data
